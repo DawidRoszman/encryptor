@@ -8,6 +8,12 @@ section here fails rather than publishing without notes.
 Newest first. Use `## <version>` with no `v` prefix, matching the tag minus the
 `v`.
 
+## 0.5.1
+
+**Edit contacts.** Each contact now has an **Edit** button, so you can fix a
+typo in a name or update the note without removing and re-adding them. Their
+public key stays as it is — if someone has a new key, add them as a new contact.
+
 ## 0.5.0
 
 **Groups.** Gather the people you often encrypt for into a named group, then pick
