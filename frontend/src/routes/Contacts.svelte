@@ -36,6 +36,40 @@
   let addError = $state('')
   let addBusy = $state(false)
 
+  // Edit form: only name and note. The key is immutable — a different key is a
+  // different person.
+  let editing = $state<Contact | null>(null)
+  let editName = $state('')
+  let editNote = $state('')
+  let editError = $state('')
+  let editBusy = $state(false)
+
+  function startEdit(c: Contact) {
+    editing = c
+    editName = c.name
+    editNote = c.note ?? ''
+    editError = ''
+  }
+
+  async function submitEdit(e: SubmitEvent) {
+    e.preventDefault()
+    const c = editing
+    if (!c || editBusy) return
+    editBusy = true
+    editError = ''
+    try {
+      const updated = await contacts.rename(c.id, editName, editNote)
+      await load()
+      editing = null
+      toast = `${updated.name} updated.`
+      announce(toast)
+    } catch (err) {
+      editError = message(err)
+    } finally {
+      editBusy = false
+    }
+  }
+
   // Delete confirmation
   let pendingDelete = $state<Contact | null>(null)
 
@@ -267,6 +301,7 @@
             <button onclick={() => copyKey(c)} aria-label={`Copy ${c.name}'s public key`}>
               Copy key
             </button>
+            <button onclick={() => startEdit(c)} aria-label={`Edit ${c.name}`}>Edit</button>
             <button
               class="danger"
               onclick={() => (pendingDelete = c)}
@@ -356,6 +391,35 @@
     <button type="button" onclick={() => (showAdd = false)}>Cancel</button>
     <button class="primary" type="submit" form="addform" disabled={addBusy}>
       {addBusy ? 'Adding…' : 'Add contact'}
+    </button>
+  {/snippet}
+</Dialog>
+
+<Dialog
+  open={editing !== null}
+  onclose={() => (editing = null)}
+  title="Edit contact"
+>
+  <form id="editform" class="stack" onsubmit={submitEdit}>
+    <div class="field">
+      <label for="ename">Name</label>
+      <input id="ename" type="text" bind:value={editName} required />
+    </div>
+    <div class="field">
+      <label for="enote">Note <span class="optional">(optional)</span></label>
+      <input id="enote" type="text" bind:value={editNote} />
+    </div>
+    <p class="hint">
+      The public key can't be changed. If they have a new key, add them again.
+    </p>
+    {#if editError}
+      <p class="alert error" role="alert">{editError}</p>
+    {/if}
+  </form>
+  {#snippet footer()}
+    <button type="button" onclick={() => (editing = null)}>Cancel</button>
+    <button class="primary" type="submit" form="editform" disabled={editBusy}>
+      {editBusy ? 'Saving…' : 'Save changes'}
     </button>
   {/snippet}
 </Dialog>
